@@ -9,11 +9,10 @@
 import Foundation
 
 public final class Referee {
-    
     // MARK: - Properties
-    
+
     public let gameboard: Gameboard
-    
+
     public private(set) lazy var winningCombinations: [[GameboardPosition]] = {
         var winningCombinations: [[GameboardPosition]] = []
         generateWinsByColumn(result: &winningCombinations)
@@ -22,15 +21,15 @@ public final class Referee {
         generateWinRightDiagonal(result: &winningCombinations)
         return winningCombinations
     }()
-    
+
     // MARK: - Init
-    
+
     public init(gameboard: Gameboard) {
         self.gameboard = gameboard
     }
-    
+
     // MARK: - Public
-    
+
     public func determineWinner() -> Player? {
         for player in Player.allCases {
             if doesPlayerHaveWinningCombination(player) {
@@ -39,9 +38,9 @@ public final class Referee {
         }
         return nil
     }
-    
+
     // MARK: - Private
-    
+
     private func generateWinsByColumn(result: inout [[GameboardPosition]]) {
         var array: [GameboardPosition] = []
         for column in 0 ..< GameboardSize.columns {
@@ -52,7 +51,7 @@ public final class Referee {
             array = []
         }
     }
-    
+
     private func generateWinsByRow(result: inout [[GameboardPosition]]) {
         var array: [GameboardPosition] = []
         for row in 0 ..< GameboardSize.rows {
@@ -63,7 +62,7 @@ public final class Referee {
             array = []
         }
     }
-    
+
     private func generateWinLeftDiagonal(result: inout [[GameboardPosition]]) {
         guard GameboardSize.columns == GameboardSize.rows else { return }
         var array: [GameboardPosition] = []
@@ -72,7 +71,7 @@ public final class Referee {
         }
         result.append(array)
     }
-    
+
     private func generateWinRightDiagonal(result: inout [[GameboardPosition]]) {
         guard GameboardSize.columns == GameboardSize.rows else { return }
         var array: [GameboardPosition] = []
@@ -81,7 +80,7 @@ public final class Referee {
         }
         result.append(array)
     }
-    
+
     private func doesPlayerHaveWinningCombination(_ player: Player) -> Bool {
         for winningPositions in winningCombinations {
             if gameboard.contains(player: player, at: winningPositions) {
@@ -91,4 +90,3 @@ public final class Referee {
         return false
     }
 }
-
