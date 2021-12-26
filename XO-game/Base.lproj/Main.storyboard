@@ -120,6 +120,7 @@
                                 <segments>
                                     <segment title="Two players"/>
                                     <segment title="Against the computer "/>
+                                    <segment title="5 marks"/>
                                 </segments>
                                 <connections>
                                     <action selector="changeMode:" destination="qh8-Kb-rR0" eventType="valueChanged" id="nWl-fV-Qcm"/>

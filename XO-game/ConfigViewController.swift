@@ -9,27 +9,28 @@
 import UIKit
 
 class ConfigViewController: UIViewController {
-
-    @IBOutlet weak var gemeModeSegment: UISegmentedControl!
+    @IBOutlet var gemeModeSegment: UISegmentedControl!
     public var configDelegate: GameConfigDelegate?
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
     }
-    
-    @IBAction func changeMode(_ sender: Any) {
+
+    @IBAction func changeMode(_: Any) {
         let gameMode: GameMode
-        switch self.gemeModeSegment.selectedSegmentIndex {
+        switch gemeModeSegment.selectedSegmentIndex {
         case 0:
             gameMode = .TwoPlayers
         case 1:
             gameMode = .againstTheComputer
+        case 2:
+            gameMode = .fiveMarks
         default:
             gameMode = .TwoPlayers
         }
-        
+
         configDelegate?.setNewMode(newMode: gameMode)
     }
 }

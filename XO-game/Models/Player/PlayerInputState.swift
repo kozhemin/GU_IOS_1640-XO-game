@@ -6,8 +6,6 @@
 //  Copyright © 2021 plasmon. All rights reserved.
 //
 
-import Foundation
-
 public class PlayerInputState: GameState {
     public private(set) var isCompleted = false
     public let markViewPrototype: MarkView

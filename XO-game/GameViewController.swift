@@ -18,21 +18,25 @@ class GameViewController: UIViewController {
     @IBOutlet var secondPlayerTurnLabel: UILabel!
     @IBOutlet var winnerLabel: UILabel!
     @IBOutlet var restartButton: UIButton!
-    
+
     private let gameboard = Gameboard()
     private var currentState: GameState! {
         didSet {
             currentState.begin()
         }
     }
-    
+
     private lazy var referee = Referee(gameboard: self.gameboard)
-    private var gameMode = GameMode.TwoPlayers
-    
+    private var gameMode = GameMode.TwoPlayers {
+        didSet {
+            goToFirstState()
+        }
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         goToFirstState()
-        
+
         gameboardView.onSelectPosition = { [weak self] position in
             guard let self = self else { return }
             self.currentState.addMark(at: position)
@@ -41,33 +45,45 @@ class GameViewController: UIViewController {
             }
         }
     }
-    
+
     // MARK: Игрок по умолчанию
-    
+
     private func goToFirstState() {
         let player = Player.first
-        currentState = PlayerInputState(player: .first, markViewPrototype: player.markViewPrototype,
-                                        gameViewController: self,
-                                        gameboard: gameboard,
-                                        gameboardView: gameboardView)
+
+        switch gameMode {
+        case .TwoPlayers, .againstTheComputer:
+            currentState = PlayerInputState(player: .first, markViewPrototype: player.markViewPrototype,
+                                            gameViewController: self,
+                                            gameboard: gameboard,
+                                            gameboardView: gameboardView)
+        case .fiveMarks:
+            currentState = PlayerFiveMarksState(player: .first, markViewPrototype: player.markViewPrototype,
+                                                gameViewController: self,
+                                                gameboard: gameboard,
+                                                gameboardView: gameboardView)
+        }
     }
-    
+
     // MARK: Другая логика выбора игрока
-    
+
     private func goToNextState() {
         if let winner = referee.determineWinner() {
             currentState = GameEndedState(winner: winner, gameViewController: self)
             return
         }
-        
-        var  player = Player.first
+
+        var player = Player.first
         if let playerInputState = currentState as? PlayerInputState {
             player = playerInputState.player.next
         }
         if let playerComputerState = currentState as? PlayerComputerState {
             player = playerComputerState.player.next
         }
-        
+        if let playerFiveMarksState = currentState as? PlayerFiveMarksState {
+            player = playerFiveMarksState.player.next
+        }
+
         switch gameMode {
         case .TwoPlayers:
             currentState = PlayerInputState(player: player, markViewPrototype: player.markViewPrototype,
@@ -87,13 +103,23 @@ class GameViewController: UIViewController {
                                                    gameboard: gameboard,
                                                    gameboardView: gameboardView)
             }
+        case .fiveMarks:
+            currentState = PlayerFiveMarksState(player: player, markViewPrototype: player.markViewPrototype,
+                                                gameViewController: self,
+                                                gameboard: gameboard,
+                                                gameboardView: gameboardView)
         }
     }
-    
+
     @IBAction func restartButtonTapped(_: UIButton) {
         Log(.restartGame)
+
+        gameboard.clear()
+        gameboardView.clear()
+        gameMode = .TwoPlayers
+        goToFirstState()
     }
-    
+
     override func prepare(for segue: UIStoryboardSegue, sender _: Any?) {
         switch segue.identifier {
         case "ShowConfigSegue":
@@ -107,6 +133,6 @@ class GameViewController: UIViewController {
 
 extension GameViewController: GameConfigDelegate {
     func setNewMode(newMode: GameMode) {
-        self.gameMode = newMode
+        gameMode = newMode
     }
 }

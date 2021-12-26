@@ -9,4 +9,5 @@
 enum GameMode: Int {
     case TwoPlayers
     case againstTheComputer
+    case fiveMarks
 }
