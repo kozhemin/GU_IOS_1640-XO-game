@@ -8,6 +8,10 @@
 
 import UIKit
 
+protocol GameConfigDelegate {
+    func setNewMode(newMode: GameMode)
+}
+
 class GameViewController: UIViewController {
     @IBOutlet var gameboardView: GameboardView!
     @IBOutlet var firstPlayerTurnLabel: UILabel!
@@ -23,6 +27,11 @@ class GameViewController: UIViewController {
     }
 
     private lazy var referee = Referee(gameboard: self.gameboard)
+    private var gameMode = GameMode.TwoPlayers {
+        didSet {
+            goToFirstState()
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -37,13 +46,26 @@ class GameViewController: UIViewController {
         }
     }
 
+    // MARK: Игрок по умолчанию
+
     private func goToFirstState() {
         let player = Player.first
-        currentState = PlayerInputState(player: .first, markViewPrototype: player.markViewPrototype,
-                                        gameViewController: self,
-                                        gameboard: gameboard,
-                                        gameboardView: gameboardView)
+
+        switch gameMode {
+        case .TwoPlayers, .againstTheComputer:
+            currentState = PlayerInputState(player: .first, markViewPrototype: player.markViewPrototype,
+                                            gameViewController: self,
+                                            gameboard: gameboard,
+                                            gameboardView: gameboardView)
+        case .fiveMarks:
+            currentState = PlayerFiveMarksState(player: .first, markViewPrototype: player.markViewPrototype,
+                                                gameViewController: self,
+                                                gameboard: gameboard,
+                                                gameboardView: gameboardView)
+        }
     }
+
+    // MARK: Другая логика выбора игрока
 
     private func goToNextState() {
         if let winner = referee.determineWinner() {
@@ -51,16 +73,66 @@ class GameViewController: UIViewController {
             return
         }
 
+        var player = Player.first
         if let playerInputState = currentState as? PlayerInputState {
-            let player = playerInputState.player.next
+            player = playerInputState.player.next
+        }
+        if let playerComputerState = currentState as? PlayerComputerState {
+            player = playerComputerState.player.next
+        }
+        if let playerFiveMarksState = currentState as? PlayerFiveMarksState {
+            player = playerFiveMarksState.player.next
+        }
+
+        switch gameMode {
+        case .TwoPlayers:
             currentState = PlayerInputState(player: player, markViewPrototype: player.markViewPrototype,
                                             gameViewController: self,
                                             gameboard: gameboard,
                                             gameboardView: gameboardView)
+        case .againstTheComputer:
+            switch player {
+            case .first:
+                currentState = PlayerInputState(player: .first, markViewPrototype: player.markViewPrototype,
+                                                gameViewController: self,
+                                                gameboard: gameboard,
+                                                gameboardView: gameboardView)
+            case .second:
+                currentState = PlayerComputerState(player: .second, markViewPrototype: player.markViewPrototype,
+                                                   gameViewController: self,
+                                                   gameboard: gameboard,
+                                                   gameboardView: gameboardView)
+            }
+        case .fiveMarks:
+            currentState = PlayerFiveMarksState(player: player, markViewPrototype: player.markViewPrototype,
+                                                gameViewController: self,
+                                                gameboard: gameboard,
+                                                gameboardView: gameboardView)
         }
     }
 
     @IBAction func restartButtonTapped(_: UIButton) {
         Log(.restartGame)
+
+        gameboard.clear()
+        gameboardView.clear()
+        gameMode = .TwoPlayers
+        goToFirstState()
+    }
+
+    override func prepare(for segue: UIStoryboardSegue, sender _: Any?) {
+        switch segue.identifier {
+        case "ShowConfigSegue":
+            guard let vc = segue.destination as? ConfigViewController else { return }
+            vc.configDelegate = self
+        default:
+            return
+        }
+    }
+}
+
+extension GameViewController: GameConfigDelegate {
+    func setNewMode(newMode: GameMode) {
+        gameMode = newMode
     }
 }

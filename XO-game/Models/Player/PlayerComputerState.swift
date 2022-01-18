@@ -1,18 +1,18 @@
 //
-//  PlayerInputState.swift
+//  PlayerComputerState.swift
 //  XO-game
 //
-//  Created by Егор Кожемин on 25.12.2021.
+//  Created by Егор Кожемин on 26.12.2021.
 //  Copyright © 2021 plasmon. All rights reserved.
 //
 
-import Foundation
-
-public class PlayerInputState: GameState {
+class PlayerComputerState: GameState {
     public private(set) var isCompleted = false
     public let markViewPrototype: MarkView
 
     public let player: Player
+
+    private var nextPosition: GameboardPosition?
     private(set) weak var gameViewController: GameViewController?
     private(set) weak var gameboard: Gameboard?
     private(set) weak var gameboardView: GameboardView?
@@ -35,28 +35,33 @@ public class PlayerInputState: GameState {
             gameViewController?.secondPlayerTurnLabel.isHidden = false
         }
         gameViewController?.winnerLabel.isHidden = true
+
+        guard let position = getNextFreePosition() else { return }
+        nextPosition = position
+        gameboardView?.onSelectPosition?(position)
     }
 
-    public func addMark(at position: GameboardPosition) {
+    func addMark(at position: GameboardPosition) {
+        guard let position = nextPosition else { return }
         Log(.playerInput(player: player, position: position))
 
-        guard let gameboardView = self.gameboardView,
-              gameboardView.canPlaceMarkView(at: position)
-        else { return }
-
-        //        let markView: MarkView
-        //        switch self.player {
-        //        case .first:
-        //            markView = XView()
-        //        case .second:
-        //            markView = OView()
-        //        }
-        //        self.gameboard?.setPlayer(self.player, at: position)
-        //        self.gameboardView?.placeMarkView(markView, at: position)
-        //        self.isCompleted = true
-
         gameboard?.setPlayer(player, at: position)
-        self.gameboardView?.placeMarkView(markViewPrototype.copy(), at: position)
+        gameboardView?.placeMarkView(markViewPrototype.copy(), at: position)
         isCompleted = true
+    }
+
+    // MARK: Получить свободную позицию путем перебора доступных ячеек
+
+    private func getNextFreePosition() -> GameboardPosition? {
+        guard let gameboardView = gameboardView else { return nil }
+        for colmn in 0 ..< GameboardSize.columns {
+            for row in 0 ..< GameboardSize.rows {
+                let position = GameboardPosition(column: colmn, row: row)
+                if gameboardView.canPlaceMarkView(at: position) {
+                    return position
+                }
+            }
+        }
+        return nil
     }
 }

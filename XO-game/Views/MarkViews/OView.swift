@@ -9,8 +9,7 @@
 import UIKit
 
 public class OView: MarkView {
-    
-    internal override func updateShapeLayer() {
+    override internal func updateShapeLayer() {
         super.updateShapeLayer()
         let center = CGPoint(x: bounds.width / 2, y: bounds.height / 2)
         let radius = 0.3 * min(bounds.width, bounds.height)
